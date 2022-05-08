@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+    db:
+      image: postgres
+      environment:
+        POSTGRES_DB: supportapp
+      ports:
+        - "5482:5432"
+      env_file:
+        - .env
+    web:
+      build: .
+      ports:
+        - "8000:8000"
+      depends_on:
+        - 'db'
+      env_file:
+        - .env
+
+    redis:
+      image: redis
+      ports:
+        - "6379:6379"
+
+    celery:
+      build:
+        context: .
+      command: celery -A supportapp worker -l INFO
+      depends_on:
+        - redis
+        - db
+      env_file:
+        - .env
+
+    celery-beat:
+      build:
+        context: .
+      command: celery -A supportapp beat -l INFO
+      depends_on:
+        - redis
+        - db
+      env_file:
+        - .env
